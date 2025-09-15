@@ -1,0 +1,33 @@
+set ns [new Simulator]
+set nf [open p4.nam w]
+$ns namtrace-all $nf
+set tf [open p2.tr w]
+$ns trace-all $tf
+proc finish {} {
+global ns nf tf
+$ns flush-trace
+close $nf
+close $tf
+exec nam p4.nam &
+exit 0
+}
+set n0 [$ns node]
+set n1 [$ns node]
+set n2 [$ns node]
+$n0 label "source node"
+$n1 label "router"
+$n2 label "Destination node"
+$ns duplex-link $n0 $n1 2mb 20ms DropTail
+$ns duplex-link $n1 $n2 200kb 100ms DropTail
+$ns queue-limit $n0 $n1 10
+$ns queue-limit $n1 $n2 10
+set udp0 [new Agent/TCP]
+$ns attach-agent $n0 $udp0
+set ftp0 [new Application/FTP]
+$ftp0 attach-agent $udp0
+set sink1 [new Agent/TCPSink]
+$ns attach-agent $n2 $sink1
+$ns connect $udp0 $sink1
+$ns at 0.1 "$ftp0 start"
+$ns at 10.0 "finish"
+$ns run  
